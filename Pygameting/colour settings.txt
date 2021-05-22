@@ -1,0 +1,74 @@
+{
+    "workbench.colorTheme": "Solarized Dark",
+    "workbench.editorAssociations": [
+        {
+            "viewType": "jupyter.notebook.ipynb",
+            "filenamePattern": "*.ipynb"
+        }
+    ],
+    "editor.suggestSelection": "first",
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "editor.cursorSmoothCaretAnimation": true,
+    "python.autoComplete.addBrackets": true,
+    "editor.renderWhitespace": "none",
+    "workbench.iconTheme": "material-icon-theme",
+    "explorer.confirmDelete": false,
+    "editor.tokenColorCustomizations": {
+        "variables": "#a7cab5",
+        "comments": "#4d4d4d",
+        "keywords":"#17ab00",
+        "numbers": "#fa2069",
+        "strings": "#02ad6c",
+        "textMateRules": [
+            {
+                "scope": "variable.other.readwrite",
+                "settings": {
+                    "foreground": "#5a9dad"
+                
+                }
+                
+            },
+            {
+                "scope": "constant.numeric",
+                "settings": {
+                    "foreground": "#fa2069",
+                    "fontStyle": "bold"
+                }
+            },
+            {
+                "scope": "variable.other.constant",
+                "settings": {
+                    "foreground": "#92e602"
+                }
+            },
+            {
+                "scope": "entity.name.function",
+                "settings": {
+                    "foreground": "#6ddffc"
+                }
+            }
+        ]
+
+        
+            
+        },
+    
+    
+    "[jsonc]": {
+
+    },
+    "debug.onTaskErrors": "debugAnyway",
+    "terminal.integrated.tabs.enabled": true,
+    "python.analysis.completeFunctionParens": true,
+    "editor.cursorWidth": 4,
+    "editor.quickSuggestionsDelay": 1,
+    "workbench.tree.indent": 30,
+    "workbench.colorCustomizations":{
+        
+
+    }
+
+        
+        
+    
+    }
