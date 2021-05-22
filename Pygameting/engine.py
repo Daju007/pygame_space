@@ -1,4 +1,6 @@
 import pygame, random, noise, time, sys, math, json
+pygame.init()
+from pygame.locals import *
 
 #variable tingamajig---------------------------------------------------------------------------------------------------------------------------------------------------
 #variable tingamajig---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6,6 +8,23 @@ import pygame, random, noise, time, sys, math, json
 #variable tingamajig---------------------------------------------------------------------------------------------------------------------------------------------------
 with open("data.json") as f:
     data = json.load(f)
+def save_data():
+  with open("data.json", "w") as f:
+    json.dump(data, f)
+
+place_holder_image = pygame.image.load("tile_frame.png")
+
+
+CHUNK_SIZE = data["CHUNK_SIZE"]
+mountain_height = data["mountain_height"]
+tile_height = data["tile_height"]
+rocks_often = data["rocks_often"]
+enemies = data["enemies_list"]
+
+
+
+
+
 
 
 
@@ -19,8 +38,8 @@ with open("data.json") as f:
 class button:
     def __init__(self,iscentrecoords, image_path, pressed_image_path, ispressed):
         self.coords = iscentrecoords
-        self.image = pygame.image.load(image_path)
-        self.pressed_image = pygame.image.load(pressed_image_path)
+        self.image = pygame.image.load(image_path).convert_alpha()
+        self.pressed_image = pygame.image.load(pressed_image_path).convert_alpha()
         self.status = self.image
         self.ispressed = ispressed
         self.height = self.image.get_height()
@@ -95,10 +114,11 @@ def generate_chunk(x,y):
         if a==1:
             enemy_spawn_number = random.randint(1,3)
             for i in range(enemy_spawn_number):
-                enemies.append(e.entity([random.randint(x*CHUNK_SIZE*66, x*CHUNK_SIZE*66+(CHUNK_SIZE*66)),y*CHUNK_SIZE],2, 0, 0.5, 10, 13, 7, 5, 66, 66, 1, "idle", 0, [0,0], 5, False, False, i, 11,100,30, (255,0,0), 2,7, place_holder_image))
+                enemies.append(entity([random.randint(x*CHUNK_SIZE*66, x*CHUNK_SIZE*66+(CHUNK_SIZE*66)),y*CHUNK_SIZE],2, 0, 0.5, 10, 13, 7, 5, 66, 66, 1, "idle", 0, [0,0], 5, False, False, i, 11,100,30, (255,0,0), 2,7, place_holder_image))
+        data["enemies_list"] = 1
 
 
-    
+    save_data()
     return CHUNK_DATA
 
 def generate_story_chunk(x,y):
@@ -142,7 +162,7 @@ def find_percentage(numerator, denominator):
     else:
         percentage = 0
     return percentage
-def calculate_bullet_radius(mouse_coords):
+def calculate_bullet_radius(mouse_coords, player, scroll):
     x1 = int(mouse_coords[0] )
     y1 = int(mouse_coords[1])
     radius = math.sqrt((player.rect.centerx-scroll[0] - x1)**2 + (player.rect.centery-scroll[1] - y1)**2)
@@ -176,12 +196,28 @@ def center_img_on_surf(img, surf, rot_point):
     surf.set_colorkey((0,0,0))
     surf.blit(img, (surf_centre[0] - rot_point[0], surf_centre[1] - rot_point[1]))
     return surf
-def blit_surf_at_player_hand(screen, surf, blit_point, angle):
+def blit_surf_at_player_hand(screen, surf, blit_point, angle, player, scroll):
     calcx = (player.rect.x+blit_point[0])-scroll[0]
     calcy = (player.rect.y+blit_point[1]) - scroll[1]
     if angle!= False:
         surf = pygame.transform.rotate(surf, angle)
     screen.blit(surf, (calcx - (surf.get_width()/2), calcy - (surf.get_height()/2)))
+
+
+def make_particles(particle_list,xy, speed, particle_sizes, amount, depreciation_rate, colour):
+    for i in range(amount):
+        particle_list.append([[xy[0], xy[1]], [random.randint(-10, 10)/speed, random.randint(-10, 10)/speed], random.randint(particle_sizes[0], particle_sizes[1]), depreciation_rate, colour])
+
+def handle_particles(particle_list, screen):
+    for particle in particle_list:    # [x,y], [xvel, yvel], size, depreciation rate, colour
+        if particle[2]<=0: 
+            particle_list.remove(particle)
+        pygame.draw.circle(screen, particle[4], particle[0], particle[2])
+        particle[0][0]+= particle[1][0]
+        particle[0][1]+= particle[1][1]
+        particle[2]-=particle[3]
+
+    
 
 #starter_functions--------------------------------------------------------------------------------------------------------------------------------------------------------------
 #starter_functions--------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,8 +283,10 @@ class entity:
         self.inventory = [False,False,False,False,False]
         self.vec = False
         self.items = {}
-        self.inventory_locs = [(4,4),(66,4),(132,4), (198,4), (262,4)]
-        self.selected_inventory_slot = 0
+        self.inventory_locs = [(4,4),(68,4),(133,4), (198,4), (264,4)]
+        self.selected_inventory_slot = False
+        self.selected_inventory_slot_index = 0
+        self.gravity_speed_set = self.gravity_speed
 
     def apply_movement_physics(self, dt):
         if self.moving_right == True:
@@ -332,19 +370,21 @@ class entity:
     
     def generate_projectile(self, damage,angle, delta_vec, player,dt):
         if player ==True:
-        
-            self.projectile_cooldown_count +=1
-            if self.projectile_cooldown_count == self.projectile_fire_speed:
-                self.projectile_cooldown_count = 0
-            if self.projectile_cooldown_count ==0:  
-                self.projectile_count +=1
-                self.centre = [self.rect.centerx, self.rect.centery]
-                projectile_vec = pygame.math.Vector2([self.centre[0], self.centre[1]])
+            if self.selected_inventory_slot != True and self.selected_inventory_slot != False:
+                if self.selected_inventory_slot[0][1] == True:
+            
+                    self.projectile_cooldown_count +=1
+                    if self.projectile_cooldown_count == self.projectile_fire_speed:
+                        self.projectile_cooldown_count = 0
+                    if self.projectile_cooldown_count ==0:  
+                        self.projectile_count +=1
+                        self.centre = [self.rect.centerx, self.rect.centery]
+                        projectile_vec = pygame.math.Vector2([self.centre[0], self.centre[1]])
  
 
 
                 
-                self.projectiles.append([[self.centre[0], self.centre[1]], self.projectile_vel, self.facing, pygame.Rect(self.centre[0], self.centre[1]+20, 40 ,18), damage,angle,delta_vec, projectile_vec])
+                        self.projectiles.append([[self.centre[0], self.centre[1]], self.projectile_vel, self.facing, pygame.Rect(self.centre[0], self.centre[1]+20, 40 ,18), damage,angle,delta_vec, projectile_vec])
         else:
             self.projectile_cooldown_count +=1
             if self.projectile_cooldown_count == self.projectile_fire_speed:
@@ -399,9 +439,13 @@ class entity:
     def render_health_bar(self, display):
         display.blit(self.health_bar_frame, (self.health_bar_frame_loc[0], self.health_bar_frame_loc[1]))
         pygame.draw.rect(display, self.health_bar_colour, (self.health_bar.x, self.health_bar.y , self.health_bar.width, self.health_bar.height))
-    def add_item(self, item_name, item_pic_path, isweapon):
+    def add_item(self, item_name, item_pic_path, isweapon, tile_number = False):
         item_pic = pygame.image.load(item_pic_path)
-        self.items[item_name] = [item_pic, isweapon]
+        if isweapon == True:
+            self.items[item_name] = [item_pic, isweapon]
+        elif isweapon ==False:
+            self.items[item_name] = [item_pic, isweapon, tile_number ]
+
 
     def add_inventory(self, item_name, number):
         if self.items[item_name] not in self.inventory:#figure something out:
@@ -439,14 +483,42 @@ class entity:
         
     
           
-    def display_inventory(self, inventory_bar, screen):
+    def display_inventory(self, inventory_bar, screen, selector):
         self.inventory_bar_loc = ((screen.get_width()/2)-inventory_bar.get_width()/2, 600)
         screen.blit(inventory_bar, (self.inventory_bar_loc))
         for slot in self.inventory:
             if slot!=False:
                 screen.blit(slot[0][0], ((self.inventory_bar_loc[0]+(self.inventory_locs[self.inventory.index(slot)][0])), 600+self.inventory_locs[self.inventory.index(slot)][1]))
+        screen.blit(selector, ((self.inventory_bar_loc[0]+self.inventory_locs[self.selected_inventory_slot_index][0]),(600+ self.inventory_locs[self.selected_inventory_slot_index][1])))
+    
+    def change_selected_inventory(self, new_index, addorminus = False):
+        if addorminus == False:
+            self.selected_inventory_slot_index = new_index
+            self.selected_inventory_slot = self.inventory[self.selected_inventory_slot_index]
+        elif addorminus == 1:
+            self.selected_inventory_slot_index+=1
+            if self.selected_inventory_slot_index == 5:
+                self.selected_inventory_slot_index = 0
+            self.selected_inventory_slot = self.inventory[self.selected_inventory_slot_index]
+        elif addorminus == -1:
+            self.selected_inventory_slot_index -=1
+            if self.selected_inventory_slot_index==-1:
+                self.selected_inventory_slot_index =4
+            self.selected_inventory_slot = self.inventory[self.selected_inventory_slot_index]
             
+    def self_destruct(self, attack):
+        self.health = -1
+        attack.health = 0
+        
+        
+        
+    
+        
+
+save_data()
 #entity--------------------------------------------------------------------------------------------------------------------------------------------------------------
 #entity--------------------------------------------------------------------------------------------------------------------------------------------------------------
 #entity--------------------------------------------------------------------------------------------------------------------------------------------------------------
 #entity--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
